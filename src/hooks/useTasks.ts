@@ -3,10 +3,10 @@ import { supabase } from '../lib/supabase'
 import type { Task, TaskWithLabels, Label, Status, Priority, CreateTaskInput } from '../types'
 
 export function useTasks(userId: string | undefined) {
-  const [tasks, setTasks]   = useState<TaskWithLabels[]>([])
+  const [tasks, setTasks] = useState<TaskWithLabels[]>([])
   const [labels, setLabels] = useState<Label[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // ─── Fetch ──────────────────────────────────────────────────────────────────
 
@@ -66,12 +66,12 @@ export function useTasks(userId: string | undefined) {
     const { data, error: insertError } = await supabase
       .from('tasks')
       .insert({
-        title:       input.title,
+        title: input.title,
         description: input.description || null,
-        priority:    input.priority,
-        due_date:    input.due_date || null,
-        status:      input.status,
-        user_id:     userId,
+        priority: input.priority,
+        due_date: input.due_date || null,
+        status: input.status,
+        user_id: userId,
         position,
       })
       .select()
@@ -142,7 +142,17 @@ export function useTasks(userId: string | undefined) {
       }
     }
 
-    await fetchTasks()
+    // Update local state optimistically to avoid a full refetch which can reorder
+    // the list and cause the task to 'pop' in the UI. Merge updated fields and
+    // replace labels if labelIds were provided.
+    setTasks(prev => prev.map(t => {
+      if (t.id !== taskId) return t
+      const merged = { ...t, ...updates }
+      if (labelIds !== undefined) {
+        merged.labels = labels.filter(l => labelIds.includes(l.id))
+      }
+      return merged as TaskWithLabels
+    }))
   }
 
   // ─── Delete Task ──────────────────────────────────────────────────────────────
@@ -173,6 +183,15 @@ export function useTasks(userId: string | undefined) {
     return data
   }
 
+  const deleteLabel = async (labelId: string) => {
+    setLabels(prev => prev.filter(l => l.id !== labelId))
+    setTasks(prev => prev.map(t => ({
+      ...t,
+      labels: t.labels.filter(l => l.id !== labelId),
+    })))
+    await supabase.from('labels').delete().eq('id', labelId)
+  }
+
   // ─── Activity Log Helper ──────────────────────────────────────────────────────
 
   const logActivity = async (
@@ -183,20 +202,20 @@ export function useTasks(userId: string | undefined) {
   ) => {
     if (!userId) return
     await supabase.from('activity_log').insert({
-      task_id:   taskId,
+      task_id: taskId,
       action,
       old_value: oldValue ?? null,
       new_value: newValue ?? null,
-      user_id:   userId,
+      user_id: userId,
     })
   }
 
   // ─── Stats ────────────────────────────────────────────────────────────────────
 
   const stats = {
-    total:     tasks.length,
-    done:      tasks.filter(t => t.status === 'done').length,
-    overdue:   tasks.filter(t => {
+    total: tasks.length,
+    done: tasks.filter(t => t.status === 'done').length,
+    overdue: tasks.filter(t => {
       if (!t.due_date || t.status === 'done') return false
       return new Date(t.due_date) < new Date()
     }).length,
@@ -214,6 +233,7 @@ export function useTasks(userId: string | undefined) {
     updateTask,
     deleteTask,
     createLabel,
+    deleteLabel,
     refetch: fetchTasks,
   }
 }

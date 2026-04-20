@@ -38,18 +38,17 @@ export function Board({
   const [activeTask, setActiveTask] = useState<TaskWithLabels | null>(null)
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   )
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
-      const q = searchQuery.toLowerCase()
+      const q = searchQuery.toLowerCase().trim()
       const matchesSearch = !q ||
         task.title.toLowerCase().includes(q) ||
         (task.description ?? '').toLowerCase().includes(q)
       const matchesPriority = !priorityFilter || task.priority === priorityFilter
-      const matchesLabel = !labelFilter ||
-        task.labels.some(l => l.id === labelFilter)
+      const matchesLabel = !labelFilter || task.labels.some(l => l.id === labelFilter)
       return matchesSearch && matchesPriority && matchesLabel
     })
   }, [tasks, searchQuery, priorityFilter, labelFilter])
@@ -59,18 +58,17 @@ export function Board({
     setActiveTask(task ?? null)
   }
 
-  const handleDragEnd = async ({ active, over }: DragEndEvent) => {
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
     setActiveTask(null)
     if (!over) return
 
-    const taskId  = active.id as string
-    const task    = tasks.find(t => t.id === taskId)
+    const taskId = active.id as string
+    const task = tasks.find(t => t.id === taskId)
     if (!task) return
 
-    // over.id is either a column id or a task id
-    const overId     = over.id as string
-    const isColumn   = COLUMN_CONFIG.some(c => c.id === overId)
-    const newStatus  = isColumn
+    const overId = over.id as string
+    const isColumn = COLUMN_CONFIG.some(c => c.id === overId)
+    const newStatus = isColumn
       ? (overId as Status)
       : (tasks.find(t => t.id === overId)?.status ?? task.status)
 
@@ -80,11 +78,7 @@ export function Board({
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex gap-5 px-6 pb-8 overflow-x-auto min-h-[calc(100vh-160px)]">
         {COLUMN_CONFIG.map(col => (
           <Column
@@ -98,18 +92,17 @@ export function Board({
         ))}
       </div>
 
-      {/* Ghost card while dragging */}
-      <DragOverlay dropAnimation={null}>
-        {activeTask && (
-          <div className="rotate-2 scale-105 opacity-90">
+      {/* Floating ghost card while dragging */}
+      <DragOverlay dropAnimation={{ duration: 150, easing: 'ease' }}>
+        {activeTask ? (
+          <div className="rotate-1 scale-[1.03] opacity-95 pointer-events-none">
             <TaskCard
               task={activeTask}
-              isDragging
-              onOpen={() => {}}
-              onDelete={() => {}}
+              onOpen={() => { }}
+              onDelete={() => { }}
             />
           </div>
-        )}
+        ) : null}
       </DragOverlay>
     </DndContext>
   )

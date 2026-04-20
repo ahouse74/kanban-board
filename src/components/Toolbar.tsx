@@ -1,5 +1,5 @@
 import React from 'react'
-import { Search, Plus, SlidersHorizontal } from 'lucide-react'
+import { Search, Plus, SlidersHorizontal, X } from 'lucide-react'
 import type { Label } from '../types'
 
 interface Props {
@@ -27,6 +27,7 @@ export function Toolbar({
 
   return (
     <div className="flex items-center gap-3 px-6 py-3 border-b border-white/[0.06]">
+      {/* Search */}
       <div className="relative flex-1 max-w-xs">
         <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
         <input
@@ -41,14 +42,14 @@ export function Toolbar({
         />
       </div>
 
+      {/* Filters */}
       <div className="flex items-center gap-2">
         <SlidersHorizontal size={13} className="text-slate-500" />
+
         <select
           value={priorityFilter}
           onChange={e => onPriorityChange(e.target.value)}
-          className="bg-white/[0.04] border border-white/[0.07] rounded-lg px-2.5 py-1.5
-            text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30
-            transition-all cursor-pointer"
+          className="dark-select"
         >
           <option value="">All priorities</option>
           <option value="high">High</option>
@@ -60,9 +61,7 @@ export function Toolbar({
           <select
             value={labelFilter}
             onChange={e => onLabelChange(e.target.value)}
-            className="bg-white/[0.04] border border-white/[0.07] rounded-lg px-2.5 py-1.5
-              text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30
-              transition-all cursor-pointer"
+            className="dark-select"
           >
             <option value="">All labels</option>
             {labels.map(l => (
@@ -74,9 +73,9 @@ export function Toolbar({
         {hasFilters && (
           <button
             onClick={() => { onSearchChange(''); onPriorityChange(''); onLabelChange('') }}
-            className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors px-1"
+            className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-300 transition-colors px-1"
           >
-            Clear
+            <X size={10} /> Clear
           </button>
         )}
       </div>

@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { X, Tag, Plus } from 'lucide-react'
-import type { CreateTaskInput, Label, Priority, Status } from '../types'
+import type { CreateTaskInput, Label, Priority, Status, Task } from '../types'
 import { COLUMN_CONFIG, PRIORITY_CONFIG } from '../types'
 
 interface Props {
   initialStatus?: Status
   labels: Label[]
   onClose: () => void
-  onCreate: (input: CreateTaskInput) => Promise<void>
+  onCreate: (input: CreateTaskInput) => Promise<Task | null>
   onCreateLabel: (name: string, color: string) => Promise<Label | null>
 }
 
@@ -17,17 +17,17 @@ const LABEL_COLORS = [
 ]
 
 export function CreateTaskModal({ initialStatus = 'todo', labels, onClose, onCreate, onCreateLabel }: Props) {
-  const [title, setTitle]         = useState('')
-  const [description, setDesc]    = useState('')
-  const [priority, setPriority]   = useState<Priority>('normal')
-  const [status, setStatus]       = useState<Status>(initialStatus)
-  const [dueDate, setDueDate]     = useState('')
+  const [title, setTitle] = useState('')
+  const [description, setDesc] = useState('')
+  const [priority, setPriority] = useState<Priority>('normal')
+  const [status, setStatus] = useState<Status>(initialStatus)
+  const [dueDate, setDueDate] = useState('')
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
 
   // New label creation inline
   const [showLabelForm, setShowLabelForm] = useState(false)
-  const [newLabelName, setNewLabelName]   = useState('')
+  const [newLabelName, setNewLabelName] = useState('')
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0])
 
   const titleRef = useRef<HTMLInputElement>(null)

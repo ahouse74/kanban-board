@@ -13,21 +13,20 @@ export default function App() {
   const { user, loading: authLoading, error: authError } = useAuth()
   const {
     tasks, labels, loading: tasksLoading, error: tasksError,
-    stats, createTask, updateTaskStatus, updateTask, deleteTask, createLabel,
+    stats, createTask, updateTaskStatus, updateTask, deleteTask, createLabel, deleteLabel,
   } = useTasks(user?.id)
 
-  // UI state
-  const [searchQuery, setSearchQuery]       = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
-  const [labelFilter, setLabelFilter]       = useState('')
-  const [showCreate, setShowCreate]         = useState(false)
-  const [createStatus, setCreateStatus]     = useState<Status>('todo')
-  const [detailTask, setDetailTask]         = useState<TaskWithLabels | null>(null)
+  const [labelFilter, setLabelFilter] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
+  const [createStatus, setCreateStatus] = useState<Status>('todo')
+  const [detailTask, setDetailTask] = useState<TaskWithLabels | null>(null)
 
   if (authLoading || tasksLoading) return <LoadingScreen />
-  if (authError)  return <ErrorScreen message={authError} />
+  if (authError) return <ErrorScreen message={authError} />
   if (tasksError) return <ErrorScreen message={tasksError} />
-  if (!user)      return <ErrorScreen message="No session found." />
+  if (!user) return <ErrorScreen message="No session found." />
 
   const handleAddTask = (status: string) => {
     setCreateStatus(status as Status)
@@ -40,12 +39,12 @@ export default function App() {
 
       <Toolbar
         searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         priorityFilter={priorityFilter}
+        onPriorityChange={setPriorityFilter}
         labelFilter={labelFilter}
+        onLabelChange={setLabelFilter}
         labels={labels}
-        onSearch={setSearchQuery}
-        onPriorityFilter={setPriorityFilter}
-        onLabelFilter={setLabelFilter}
         onNewTask={() => { setCreateStatus('todo'); setShowCreate(true) }}
       />
 
@@ -80,16 +79,27 @@ export default function App() {
           userId={user.id}
           onClose={() => setDetailTask(null)}
           onUpdate={async (id, updates, labelIds) => {
-            await updateTask(id, updates, labelIds)
-            // Refresh the open task from updated list
-            setDetailTask(prev =>
-              prev ? { ...prev, ...updates } : null
-            )
+            // If status changed, use the dedicated status update to keep positions and activity consistent
+            const newStatus = (updates as any)?.status as Status | undefined
+            if (newStatus && detailTask && detailTask.status !== newStatus) {
+              // update status (optimistic) and log activity
+              await updateTaskStatus(id, newStatus, detailTask.status)
+              // remove status from field updates so we don't update it twice
+              const { status, ...otherUpdates } = updates as any
+              if (Object.keys(otherUpdates).length > 0 || labelIds !== undefined) {
+                await updateTask(id, otherUpdates, labelIds)
+              }
+            } else {
+              await updateTask(id, updates, labelIds)
+            }
+
+            setDetailTask(prev => prev ? { ...prev, ...updates } : null)
           }}
           onDelete={(id) => {
             deleteTask(id)
             setDetailTask(null)
           }}
+          onDeleteLabel={deleteLabel}
         />
       )}
     </div>
