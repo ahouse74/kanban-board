@@ -23,18 +23,8 @@ A polished, Linear-inspired Kanban task manager built with React, TypeScript, an
 
 ```bash
 git clone <your-repo-url>
-cd kanban-board
 npm install
 ```
-
-### 2. Set up Supabase
-
-1. Create a free project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor** and run the entire contents of `schema.sql`
-3. Go to **Authentication → Providers → Anonymous Sign-In** and **enable it**
-4. Go to **Project Settings → API** and copy:
-   - **Project URL** → `VITE_SUPABASE_URL`
-   - **anon/public key** → `VITE_SUPABASE_ANON_KEY`
 
 ### 3. Configure environment
 
@@ -54,21 +44,6 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 npm run dev
 # Open http://localhost:5173
 ```
-
----
-
-## Deploy to Vercel
-
-```bash
-npm install -g vercel
-vercel
-```
-
-When prompted, add the two environment variables from your `.env`.
-
-Or use **Vercel Dashboard → Import Git Repo** and set env vars in the project settings.
-
----
 
 ## Project Structure
 
@@ -111,12 +86,3 @@ See `schema.sql` for the full schema. Summary:
 | `activity_log` | Task change history                     |
 
 All tables have RLS enabled. Users can only access rows where `user_id = auth.uid()`.
-
----
-
-## Security Notes
-
-- **Never commit `.env`** — it's in `.gitignore`
-- Only the public `anon` key is used — never the `service_role` key
-- RLS enforces data isolation at the database level
-- Anonymous sessions persist in `localStorage` for returning users

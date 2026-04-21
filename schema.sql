@@ -1,6 +1,5 @@
 -- ============================================================
 -- Kanban Board — Full Supabase Schema
--- Run this entire file in: Supabase Dashboard → SQL Editor
 -- ============================================================
 
 -- ─── Extensions ──────────────────────────────────────────────
@@ -165,12 +164,3 @@ create policy "Users can view own activity"
 create policy "Users can insert own activity"
   on public.activity_log for insert
   with check (auth.uid() = user_id);
-
--- ─── Enable Anonymous Sign-In ─────────────────────────────────
--- You must ALSO enable this in the Supabase Dashboard:
--- Authentication → Providers → Anonymous Sign-In → Enable
--- (This SQL alone is not enough — the toggle is required)
-
--- ─── Done! ────────────────────────────────────────────────────
--- Schema is ready. Go to Authentication → Providers → Anonymous
--- and enable anonymous sign-in, then start the app.
